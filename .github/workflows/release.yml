@@ -12,7 +12,7 @@ jobs:
   release:
     # Skip if this push was the automated version bump commit
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, astra]
 
     steps:
       - name: Checkout code
