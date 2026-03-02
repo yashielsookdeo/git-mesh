@@ -27,39 +27,31 @@ This document explains the CI/CD workflows for the GitMesh VS Code extension.
 ### 2. Release Extension (`release.yml`)
 
 **Triggers:**
-- Push of a tag starting with `v*` (e.g., `v0.1.0`)
-- Manual trigger via GitHub Actions UI
+- Push to `main` branch (automatic)
 
 **What it does:**
 - Compiles and packages the extension
-- **Automatically creates a GitHub Release** based on the tag
-- Uploads the VSIX to the release assets
+- Auto-bumps the patch version in `package.json`
+- Commits the version bump back to `main` with `[skip ci]` (prevents infinite loop)
+- Creates and pushes a git tag (e.g. `v0.1.2`)
+- **Automatically creates a GitHub Release** with the VSIX attached
 - Generates release notes automatically
 - Stores VSIX as artifact (90-day retention)
 
 ## Creating a Release
 
-The release process is now fully automated via git tags.
+Releases are fully automatic. Every push to `main` triggers:
 
-### Step 1: Update Version
-Update the version in `package.json` and create a tag:
+1. Compile and package the VSIX
+2. Auto-bump the patch version in `package.json`
+3. Commit the version bump back to `main` with `[skip ci]` (prevents loop)
+4. Create and push a git tag (e.g. `v0.1.2`)
+5. Publish a GitHub Release with the `.vsix` attached and auto-generated release notes
 
-```bash
-# Updates version to 0.1.1 and creates a git tag 'v0.1.1'
-npm version patch
+**To release:** just push to `main`. No manual steps needed.
 
-# OR specific version
-npm version 0.2.0
-```
-
-### Step 2: Push changes and tags
-Pushing the tag triggers the release workflow:
-
-```bash
-git push && git push --tags
-```
-
-**That's it!** The workflow will run, create a "Release v0.1.1" on GitHub, and attach the `.vsix` file.
+**To bump minor or major:** update `package.json` version manually before pushing,
+and the workflow will bump patch on top of that.
 
 ## Manual Packaging
 
@@ -133,12 +125,12 @@ The extension version is managed in `package.json`:
 - **Minor** (0.1.0): New features, backwards compatible
 - **Patch** (0.0.1): Bug fixes
 
-Update the version before creating a release:
+To manually bump minor or major before pushing to `main`:
 
 ```bash
-npm version patch  # 0.1.0 → 0.1.1
-npm version minor  # 0.1.0 → 0.2.0
-npm version major  # 0.1.0 → 1.0.0
+npm version patch --no-git-tag-version  # 0.1.0 → 0.1.1
+npm version minor --no-git-tag-version  # 0.1.0 → 0.2.0
+npm version major --no-git-tag-version  # 0.1.0 → 1.0.0
 ```
 
-This updates `package.json` and creates a git tag automatically.
+This updates `package.json` only. The release workflow handles tagging automatically.
