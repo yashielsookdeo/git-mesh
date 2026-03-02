@@ -1,0 +1,37 @@
+# CodeRabbit configuration
+# Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en-US"
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        Focus on: strict TypeScript typing (avoid `any`), correct VS Code API usage,
+        proper error handling, and security (no shell injection, no unsanitised inputs).
+        Flag missing `dispose()` calls on VS Code resources.
+    - path: "src/webview/**/*.tsx"
+      instructions: |
+        Focus on: React performance (unnecessary re-renders, missing `useCallback`/`useMemo`),
+        XSS risks via postMessage (always validate message origin and shape),
+        and accessibility (ARIA labels, keyboard navigation).
+    - path: ".github/workflows/**"
+      instructions: |
+        Focus on: secret exposure (no secrets in logs or env), overly broad permissions
+        (principle of least privilege), supply chain risks (pin action versions to SHA),
+        and injection via untrusted inputs in `run:` steps.
+
+tools:
+  markdownlint:
+    enabled: false
+  shellcheck:
+    enabled: true
