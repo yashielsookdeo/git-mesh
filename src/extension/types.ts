@@ -3,12 +3,27 @@ import * as vscode from 'vscode';
 export interface RepoStatus {
   path: string;
   name: string;
+  alias?: string;
+  order?: number;
   branch: string;
   isDirty: boolean;
   ahead: number;
   behind: number;
   hasUntracked: boolean;
   lastUpdated: number;
+}
+
+export interface RepoMetadata {
+  path: string;
+  alias?: string;
+  order: number;
+}
+
+export interface RepoCache {
+  repos: RepoMetadata[];
+  workspaceFileHash: string;
+  workspaceFoldersHash: string;
+  lastScanTimestamp: number;
 }
 
 export interface CommitInfo {

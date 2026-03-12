@@ -1,6 +1,8 @@
 export interface RepoStatus {
   path: string;
   name: string;
+  alias?: string;
+  order?: number;
   branch: string;
   isDirty: boolean;
   ahead: number;
