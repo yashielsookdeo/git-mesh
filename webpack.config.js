@@ -1,6 +1,40 @@
 const path = require('path');
 
-module.exports = {
+const extensionConfig = {
+  target: 'node',
+  entry: './src/extension/extension.ts',
+  output: {
+    path: path.resolve(__dirname, 'out', 'extension'),
+    filename: 'extension.js',
+    libraryTarget: 'commonjs2'
+  },
+  externals: {
+    vscode: 'commonjs vscode'
+  },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.json'
+          }
+        },
+        exclude: /node_modules/
+      }
+    ]
+  },
+  devtool: 'source-map',
+  performance: {
+    hints: false
+  }
+};
+
+const webviewConfig = {
   entry: './src/webview/src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'out', 'webview'),
@@ -32,3 +66,5 @@ module.exports = {
     hints: false
   }
 };
+
+module.exports = [extensionConfig, webviewConfig];
