@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { MessageFromWebview, MessageToWebview, RepoStatus, BulkOperationRequest, OperationProgress, GitTreeRequest } from './types';
 import { GitRunner } from './gitRunner';
-import { RepoDiscovery } from './repoDiscovery';
+import { RepoSource } from './repoSource';
 import { StatusPoller } from './statusPoller';
 import { BulkOperations } from './bulkOperations';
 
@@ -9,17 +9,18 @@ export class GitMeshWebviewProvider {
   private panel: vscode.WebviewPanel | undefined;
   private disposables: vscode.Disposable[] = [];
   private gitRunner: GitRunner;
-  private repoDiscovery: RepoDiscovery;
+  private repoSource: RepoSource;
   private statusPoller: StatusPoller;
   private bulkOperations: BulkOperations;
   private currentRepos: string[] = [];
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly outputChannel: vscode.OutputChannel
+    private readonly outputChannel: vscode.OutputChannel,
+    private readonly context: vscode.ExtensionContext
   ) {
     this.gitRunner = new GitRunner(outputChannel);
-    this.repoDiscovery = new RepoDiscovery(outputChannel);
+    this.repoSource = new RepoSource(context.globalState, outputChannel);
     this.statusPoller = new StatusPoller(
       this.gitRunner,
       outputChannel,
@@ -32,7 +33,7 @@ export class GitMeshWebviewProvider {
       () => this.handleOperationComplete()
     );
 
-    this.repoDiscovery.setupWatcher(() => this.refreshRepos());
+    this.repoSource.setupWatcher(() => this.refreshRepos());
   }
 
   public show() {
@@ -209,7 +210,20 @@ export class GitMeshWebviewProvider {
 
   private async refreshRepos() {
     this.outputChannel.appendLine('[WebviewProvider] Refreshing repositories');
-    this.currentRepos = await this.repoDiscovery.discoverRepos();
+
+    // Load from cache for instant display
+    const cached = await this.repoSource.loadCached();
+    if (cached.length > 0 && this.currentRepos.length === 0) {
+      // Only use cache for initial load to avoid double-poll
+      this.currentRepos = cached.map(r => r.path);
+    }
+
+    // Discover repos (returns cached if hash matches, or fresh scan)
+    const discovered = await this.repoSource.discoverRepos();
+    const discoveredPaths = discovered.map(r => r.path);
+
+    // Update poller with final repo list
+    this.currentRepos = discoveredPaths;
     this.statusPoller.setRepos(this.currentRepos);
     this.statusPoller.startPolling(5000);
   }
@@ -221,9 +235,23 @@ export class GitMeshWebviewProvider {
   }
 
   private handleStatusUpdate(statuses: RepoStatus[]) {
+    // Merge alias and order from RepoSource metadata
+    const metadataMap = this.repoSource.getMetadataMap();
+    const enriched = statuses.map(status => {
+      const meta = metadataMap.get(status.path);
+      return {
+        ...status,
+        alias: meta?.alias,
+        order: meta?.order ?? 999,
+      };
+    });
+
+    // Sort by order
+    enriched.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
     this.postMessage({
       type: 'repoStatusUpdate',
-      data: { repos: statuses }
+      data: { repos: enriched }
     });
   }
 
@@ -245,7 +273,7 @@ export class GitMeshWebviewProvider {
 
   dispose() {
     this.statusPoller.dispose();
-    this.repoDiscovery.dispose();
+    this.repoSource.dispose();
     this.disposables.forEach(d => d.dispose());
   }
 

@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('GitMesh');
   outputChannel.appendLine('GitMesh extension activated');
 
-  const webviewProvider = new GitMeshWebviewProvider(context.extensionUri, outputChannel);
+  const webviewProvider = new GitMeshWebviewProvider(context.extensionUri, outputChannel, context);
 
   registerCommands(context, webviewProvider, outputChannel);
 
