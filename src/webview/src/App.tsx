@@ -18,7 +18,11 @@ export const App: React.FC = () => {
   const handleMessage = useCallback((message: MessageToWebview) => {
     switch (message.type) {
       case 'repoStatusUpdate':
-        setRepos(message.data.repos || []);
+        setRepos(
+          (message.data.repos || []).sort(
+            (a: RepoStatus, b: RepoStatus) => (a.order ?? 999) - (b.order ?? 999)
+          )
+        );
         setIsRefreshing(false);
         break;
       case 'gitTreeUpdate':
@@ -63,11 +67,12 @@ export const App: React.FC = () => {
 
   const filteredRepos = useMemo(() => {
     if (!searchQuery.trim()) return repos;
-    const q = searchQuery.toLowerCase();
-    return repos.filter(r =>
-      r.name.toLowerCase().includes(q) ||
-      r.branch.toLowerCase().includes(q)
-    );
+    const keywords = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return repos.filter(repo => {
+      const statusText = repo.isDirty ? 'modified' : repo.hasUntracked ? 'untracked' : 'clean';
+      const searchable = `${repo.alias || ''} ${repo.name} ${repo.branch} ${statusText}`.toLowerCase();
+      return keywords.every(kw => searchable.includes(kw));
+    });
   }, [repos, searchQuery]);
 
   const toggleRepoSelection = (repoPath: string) => {
