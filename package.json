@@ -2,7 +2,7 @@
   "name": "gitmesh",
   "displayName": "GitMesh",
   "description": "Bulk Git operations dashboard for managing multiple repositories",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "gitmesh",
   "engines": {
     "vscode": "^1.85.0"
