@@ -46,7 +46,10 @@ export const RepositoryCard: React.FC<RepositoryCardProps> = ({
                         <FolderIcon />
                     </div>
                     <div className="repo-info">
-                        <div className="repo-name">{repo.name}</div>
+                        <div className="repo-name">{repo.alias || repo.name}</div>
+                        {repo.alias && (
+                            <div className="repo-path">{repo.name}</div>
+                        )}
                         <div className="repo-branch">
                             <GitBranchIcon />
                             <span>{repo.branch}</span>
