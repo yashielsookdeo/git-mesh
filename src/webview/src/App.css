@@ -708,3 +708,77 @@ button.icon-button:hover:not(:disabled) {
 ::-webkit-scrollbar-thumb:active {
   background: var(--vscode-scrollbarSlider-activeBackground);
 }
+
+/* ── Context Menu / Dropdown ── */
+.context-menu {
+  background: var(--vscode-menu-background, var(--vscode-sideBar-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: var(--gm-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  min-width: 160px;
+  padding: 4px 0;
+  animation: fadeIn 0.1s ease;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  border: none;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus {
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  outline: none;
+}
+
+.context-menu-item.danger {
+  color: var(--vscode-errorForeground, #f85149);
+}
+
+.context-menu-item.danger:hover,
+.context-menu-item.danger:focus {
+  background: rgba(248, 81, 73, 0.1);
+}
+
+/* More dropdown wrapper */
+.more-dropdown {
+  position: relative;
+}
+
+/* Repo card ellipsis button */
+.repo-actions-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  border: none;
+  border-radius: var(--gm-radius);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--gm-fast), background var(--gm-fast);
+}
+
+.repo-card:hover .repo-actions-btn,
+.repo-actions-btn:focus {
+  opacity: 1;
+}
+
+.repo-actions-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}

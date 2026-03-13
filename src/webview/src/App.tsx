@@ -2,7 +2,8 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useWebviewMessages } from './hooks/useWebviewMessages';
 import { RepoStatus, CommitInfo, MessageToWebview, OperationProgress } from './types';
 import { RepositoryCard } from './components/RepositoryCard';
-import { RefreshIcon, SearchIcon, GitMeshLogo, FolderOpenIcon } from './components/Icons';
+import { RefreshIcon, SearchIcon, GitMeshLogo, FolderOpenIcon, SyncIcon, MoreIcon } from './components/Icons';
+import { ContextMenu, MenuItem } from './components/ContextMenu';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -15,6 +16,7 @@ export const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [operations, setOperations] = useState<Map<string, OperationProgress>>(new Map());
   const [sortMode, setSortMode] = useState<'workspace' | 'status' | 'branch' | 'name'>('workspace');
+  const [moreMenuPos, setMoreMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   const handleMessage = useCallback((message: MessageToWebview) => {
     switch (message.type) {
@@ -176,6 +178,27 @@ export const App: React.FC = () => {
     postMessage({ type: 'refreshStatus' });
   };
 
+  const handleBulkSync = () => {
+    postMessage({
+      type: 'bulkSync',
+      data: { operation: 'sync', repoPaths: Array.from(selectedRepos) }
+    });
+  };
+
+  const handleBulkStash = () => {
+    postMessage({
+      type: 'bulkStash',
+      data: { operation: 'stash', repoPaths: Array.from(selectedRepos) }
+    });
+  };
+
+  const handleBulkStashPop = () => {
+    postMessage({
+      type: 'bulkStashPop',
+      data: { operation: 'stashPop', repoPaths: Array.from(selectedRepos) }
+    });
+  };
+
   const selectAll = () => {
     setSelectedRepos(new Set(filteredRepos.map(r => r.path)));
   };
@@ -264,18 +287,46 @@ export const App: React.FC = () => {
               )}
             </div>
             <div className="bulk-actions">
-              <button className="action-btn fetch" onClick={handleBulkFetch} disabled={selectedRepos.size === 0} title="Fetch from remote">
-                Fetch
+              <button className="action-btn" onClick={handleBulkSync} disabled={selectedRepos.size === 0} title="Sync repositories">
+                <SyncIcon /> Sync
               </button>
-              <button className="action-btn checkout" onClick={handleBulkCheckout} disabled={selectedRepos.size === 0} title="Checkout branch">
-                Checkout
-              </button>
-              <button className="action-btn push" onClick={handleBulkPush} disabled={selectedRepos.size === 0} title="Push to remote">
+              <button className="action-btn" onClick={handleBulkPush} disabled={selectedRepos.size === 0} title="Push to remote">
                 Push
               </button>
-              <button className="action-btn danger" onClick={handleBulkReset} disabled={selectedRepos.size === 0} title="Reset repositories">
-                Reset
-              </button>
+              <div className="more-dropdown">
+                <button
+                  className="action-btn secondary"
+                  disabled={selectedRepos.size === 0}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setMoreMenuPos({ x: rect.left, y: rect.bottom + 4 });
+                  }}
+                >
+                  <MoreIcon /> More
+                </button>
+                {moreMenuPos && (
+                  <ContextMenu
+                    items={[
+                      { label: 'Fetch', action: 'fetch' },
+                      { label: 'Checkout', action: 'checkout' },
+                      { label: 'Stash', action: 'stash' },
+                      { label: 'Stash Pop', action: 'stashPop' },
+                      { label: 'Reset', action: 'reset', danger: true },
+                    ]}
+                    position={moreMenuPos}
+                    onSelect={(action) => {
+                      switch (action) {
+                        case 'fetch': handleBulkFetch(); break;
+                        case 'checkout': handleBulkCheckout(); break;
+                        case 'stash': handleBulkStash(); break;
+                        case 'stashPop': handleBulkStashPop(); break;
+                        case 'reset': handleBulkReset(); break;
+                      }
+                    }}
+                    onClose={() => setMoreMenuPos(null)}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </>
