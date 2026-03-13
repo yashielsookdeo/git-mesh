@@ -105,6 +105,12 @@ export class GitMeshWebviewProvider {
       case 'bulkSync':
         await this.handleBulkSync(message.data as BulkOperationRequest);
         break;
+      case 'bulkStash':
+        await this.handleBulkStash(message.data as BulkOperationRequest);
+        break;
+      case 'bulkStashPop':
+        await this.handleBulkStashPop(message.data as BulkOperationRequest);
+        break;
       case 'fetchGitTree':
         await this.handleFetchGitTree(message.data as GitTreeRequest);
         break;
@@ -254,6 +260,24 @@ export class GitMeshWebviewProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       vscode.window.showErrorMessage(`Bulk sync failed: ${errorMessage}`);
+    }
+  }
+
+  private async handleBulkStash(request: BulkOperationRequest) {
+    try {
+      await this.bulkOperations.executeBulkStash(request);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Bulk stash failed: ${errorMessage}`);
+    }
+  }
+
+  private async handleBulkStashPop(request: BulkOperationRequest) {
+    try {
+      await this.bulkOperations.executeBulkStashPop(request);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Bulk stash pop failed: ${errorMessage}`);
     }
   }
 

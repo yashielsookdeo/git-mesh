@@ -188,6 +188,70 @@ export class BulkOperations {
     this.onComplete();
   }
 
+  async executeBulkStash(request: BulkOperationRequest): Promise<void> {
+    this.outputChannel.appendLine(
+      `[BulkOperations] Starting bulk stash for ${request.repoPaths.length} repos`
+    );
+
+    const operations: QueuedOperation[] = request.repoPaths.map(repoPath => ({
+      repoPath,
+      operation: 'stash',
+      execute: async () => {
+        // Check if there's anything to stash
+        const statusResult = await this.gitRunner.runGit(repoPath, ['status', '--porcelain']);
+        if (statusResult.stdout.trim().length === 0) {
+          this.onProgress({
+            repoPath,
+            operation: 'stash',
+            status: 'skipped',
+            message: 'Nothing to stash'
+          });
+          return false;
+        }
+
+        const result = await this.gitRunner.runGit(repoPath, ['stash', 'push', '-m', 'GitMesh bulk stash']);
+        if (result.exitCode !== 0) {
+          throw new Error(result.stderr || 'Stash failed');
+        }
+      }
+    }));
+
+    await this.operationQueue.enqueue(operations);
+    this.onComplete();
+  }
+
+  async executeBulkStashPop(request: BulkOperationRequest): Promise<void> {
+    this.outputChannel.appendLine(
+      `[BulkOperations] Starting bulk stash pop for ${request.repoPaths.length} repos`
+    );
+
+    const operations: QueuedOperation[] = request.repoPaths.map(repoPath => ({
+      repoPath,
+      operation: 'stashPop',
+      execute: async () => {
+        // Check if there are stash entries
+        const listResult = await this.gitRunner.runGit(repoPath, ['stash', 'list']);
+        if (listResult.stdout.trim().length === 0) {
+          this.onProgress({
+            repoPath,
+            operation: 'stashPop',
+            status: 'skipped',
+            message: 'No stash entries'
+          });
+          return false;
+        }
+
+        const result = await this.gitRunner.runGit(repoPath, ['stash', 'pop']);
+        if (result.exitCode !== 0) {
+          throw new Error(result.stderr || 'Stash pop failed');
+        }
+      }
+    }));
+
+    await this.operationQueue.enqueue(operations);
+    this.onComplete();
+  }
+
   private async detectDefaultBranch(repoPath: string): Promise<string> {
     // Try to auto-detect from remote
     await this.gitRunner.runGit(repoPath, ['remote', 'set-head', 'origin', '--auto']);
