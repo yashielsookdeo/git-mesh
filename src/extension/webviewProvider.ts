@@ -76,6 +76,12 @@ export class GitMeshWebviewProvider {
       this.disposables
     );
 
+    // Send persisted sort mode to webview
+    this.postMessage({
+      type: 'sortModeUpdate',
+      data: { sortMode: this.context.globalState.get('gitmesh.sortMode', 'workspace') }
+    });
+
     this.panel.onDidDispose(
       () => {
         this.panel = undefined;
@@ -126,6 +132,15 @@ export class GitMeshWebviewProvider {
         break;
       case 'fetchGitTree':
         await this.handleFetchGitTree(message.data as GitTreeRequest);
+        break;
+      case 'setSortMode':
+        await this.context.globalState.update('gitmesh.sortMode', message.data?.sortMode || 'workspace');
+        break;
+      case 'getSortMode':
+        this.postMessage({
+          type: 'sortModeUpdate',
+          data: { sortMode: this.context.globalState.get('gitmesh.sortMode', 'workspace') }
+        });
         break;
     }
   }
