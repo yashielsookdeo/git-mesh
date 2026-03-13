@@ -17,6 +17,7 @@ export const App: React.FC = () => {
   const [operations, setOperations] = useState<Map<string, OperationProgress>>(new Map());
   const [sortMode, setSortMode] = useState<'workspace' | 'status' | 'branch' | 'name'>('workspace');
   const [moreMenuPos, setMoreMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [repoMenuState, setRepoMenuState] = useState<{ pos: { x: number; y: number }; repoPath: string } | null>(null);
 
   const handleMessage = useCallback((message: MessageToWebview) => {
     switch (message.type) {
@@ -207,6 +208,28 @@ export const App: React.FC = () => {
     setSelectedRepos(new Set());
   };
 
+  const handleRepoContextAction = (repoPath: string, action: string) => {
+    if (action.startsWith('__open_menu__:')) {
+      const parts = action.split(':');
+      setRepoMenuState({
+        pos: { x: parseFloat(parts[1]), y: parseFloat(parts[2]) },
+        repoPath
+      });
+      return;
+    }
+
+    const data = { operation: action, repoPaths: [repoPath] };
+    switch (action) {
+      case 'sync': postMessage({ type: 'bulkSync', data }); break;
+      case 'push': postMessage({ type: 'bulkPush', data }); break;
+      case 'fetch': postMessage({ type: 'bulkFetch', data }); break;
+      case 'checkout': postMessage({ type: 'bulkCheckout', data }); break;
+      case 'stash': postMessage({ type: 'bulkStash', data }); break;
+      case 'stashPop': postMessage({ type: 'bulkStashPop', data }); break;
+      case 'reset': postMessage({ type: 'bulkReset', data }); break;
+    }
+  };
+
   const handleSortChange = (mode: 'workspace' | 'status' | 'branch' | 'name') => {
     setSortMode(mode);
     postMessage({ type: 'setSortMode', data: { sortMode: mode } });
@@ -361,11 +384,28 @@ export const App: React.FC = () => {
                 commits={gitTrees.get(repo.path) || []}
                 isLoadingTree={loadingTrees.has(repo.path)}
                 operation={operations.get(repo.path)}
+                onContextAction={(action) => handleRepoContextAction(repo.path, action)}
                 onToggleSelect={() => toggleRepoSelection(repo.path)}
                 onToggleExpand={() => toggleRepoExpand(repo.path)}
                 style={{ animationDelay: `${index * 30}ms` }}
               />
             ))}
+            {repoMenuState && (
+              <ContextMenu
+                items={[
+                  { label: 'Sync', action: 'sync' },
+                  { label: 'Push', action: 'push' },
+                  { label: 'Fetch', action: 'fetch' },
+                  { label: 'Checkout', action: 'checkout' },
+                  { label: 'Stash', action: 'stash' },
+                  { label: 'Stash Pop', action: 'stashPop' },
+                  { label: 'Reset', action: 'reset', danger: true },
+                ]}
+                position={repoMenuState.pos}
+                onSelect={(action) => handleRepoContextAction(repoMenuState.repoPath, action)}
+                onClose={() => setRepoMenuState(null)}
+              />
+            )}
           </div>
         )}
       </div>
