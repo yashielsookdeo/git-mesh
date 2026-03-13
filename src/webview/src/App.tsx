@@ -46,11 +46,7 @@ export const App: React.FC = () => {
         break;
       case 'operationComplete':
         setTimeout(() => {
-          setOperations(prev => {
-            const next = new Map(prev);
-            next.delete(message.data.repoPath);
-            return next;
-          });
+          setOperations(new Map());
         }, 2000);
         break;
       case 'logMessage':

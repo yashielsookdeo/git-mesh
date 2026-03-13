@@ -28,18 +28,18 @@ export interface GitTreeData {
 export interface OperationProgress {
   repoPath: string;
   operation: string;
-  status: 'pending' | 'running' | 'success' | 'error';
+  status: 'pending' | 'running' | 'success' | 'error' | 'skipped';
   message?: string;
   error?: string;
 }
 
 export interface MessageToWebview {
-  type: 'repoStatusUpdate' | 'operationProgress' | 'operationComplete' | 'logMessage' | 'gitTreeUpdate';
+  type: 'repoStatusUpdate' | 'operationProgress' | 'operationComplete' | 'logMessage' | 'gitTreeUpdate' | 'sortModeUpdate';
   data: any;
 }
 
 export interface MessageFromWebview {
-  type: 'fetchRepos' | 'bulkFetch' | 'bulkCheckout' | 'bulkPush' | 'bulkReset' | 'refreshStatus' | 'fetchGitTree';
+  type: 'fetchRepos' | 'bulkFetch' | 'bulkCheckout' | 'bulkPush' | 'bulkReset' | 'bulkSync' | 'bulkStash' | 'bulkStashPop' | 'refreshStatus' | 'fetchGitTree' | 'setSortMode' | 'getSortMode';
   data?: any;
 }
 

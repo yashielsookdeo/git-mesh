@@ -50,18 +50,19 @@ export interface GitResult {
 export interface OperationProgress {
   repoPath: string;
   operation: string;
-  status: 'pending' | 'running' | 'success' | 'error';
+  status: 'pending' | 'running' | 'success' | 'error' | 'skipped';
   message?: string;
   error?: string;
 }
 
 export interface BulkOperationRequest {
-  operation: 'fetch' | 'checkout' | 'push' | 'reset';
+  operation: 'fetch' | 'checkout' | 'push' | 'reset' | 'sync' | 'stash' | 'stashPop';
   repoPaths: string[];
   options?: {
     branch?: string;
     resetMode?: 'soft' | 'mixed' | 'hard';
     resetCount?: number;
+    pushMode?: 'normal' | 'force-with-lease';
   };
 }
 
@@ -71,12 +72,12 @@ export interface GitTreeRequest {
 }
 
 export interface MessageToWebview {
-  type: 'repoStatusUpdate' | 'operationProgress' | 'operationComplete' | 'logMessage' | 'gitTreeUpdate';
+  type: 'repoStatusUpdate' | 'operationProgress' | 'operationComplete' | 'logMessage' | 'gitTreeUpdate' | 'sortModeUpdate';
   data: any;
 }
 
 export interface MessageFromWebview {
-  type: 'fetchRepos' | 'bulkFetch' | 'bulkCheckout' | 'bulkPush' | 'bulkReset' | 'refreshStatus' | 'fetchGitTree';
+  type: 'fetchRepos' | 'bulkFetch' | 'bulkCheckout' | 'bulkPush' | 'bulkReset' | 'bulkSync' | 'bulkStash' | 'bulkStashPop' | 'refreshStatus' | 'fetchGitTree' | 'setSortMode' | 'getSortMode';
   data?: any;
 }
 

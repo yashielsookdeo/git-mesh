@@ -4,7 +4,7 @@ import { OperationProgress } from './types';
 export interface QueuedOperation {
   repoPath: string;
   operation: string;
-  execute: () => Promise<void>;
+  execute: () => Promise<void | false>;
 }
 
 export class OperationQueue {
@@ -60,14 +60,17 @@ export class OperationQueue {
     });
 
     try {
-      await operation.execute();
-      
-      this.onProgress({
-        repoPath: operation.repoPath,
-        operation: operation.operation,
-        status: 'success',
-        message: 'Completed successfully'
-      });
+      const result = await operation.execute();
+
+      // If execute returns false, it handled its own progress reporting (e.g., skipped)
+      if (result !== false) {
+        this.onProgress({
+          repoPath: operation.repoPath,
+          operation: operation.operation,
+          status: 'success',
+          message: 'Completed successfully'
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
