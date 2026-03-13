@@ -73,7 +73,11 @@ export class BulkOperations {
           throw new Error('Repository has uncommitted changes');
         }
 
-        const result = await this.gitRunner.runGit(repoPath, ['push']);
+        const pushArgs = ['push'];
+        if (request.options?.pushMode === 'force-with-lease') {
+          pushArgs.push('--force-with-lease');
+        }
+        const result = await this.gitRunner.runGit(repoPath, pushArgs);
         if (result.exitCode !== 0) {
           throw new Error(result.stderr || 'Push failed');
         }

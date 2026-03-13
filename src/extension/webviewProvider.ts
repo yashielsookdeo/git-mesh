@@ -97,7 +97,7 @@ export class GitMeshWebviewProvider {
         await this.handleBulkCheckout(message.data as BulkOperationRequest);
         break;
       case 'bulkPush':
-        await this.handleBulkOperation(message.data as BulkOperationRequest);
+        await this.handleBulkPush(message.data as BulkOperationRequest);
         break;
       case 'bulkReset':
         await this.handleBulkReset(message.data as BulkOperationRequest);
@@ -153,6 +153,43 @@ export class GitMeshWebviewProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       vscode.window.showErrorMessage(`Bulk checkout failed: ${errorMessage}`);
+    }
+  }
+
+  private async handleBulkPush(request: BulkOperationRequest) {
+    const items = [
+      { label: 'Push', description: 'Normal push', value: 'normal' as const },
+      { label: 'Force Push (--force-with-lease)', description: 'Safe force push', value: 'force-with-lease' as const }
+    ];
+
+    const pushMode = await vscode.window.showQuickPick(items, {
+      placeHolder: 'Select push mode',
+      title: 'Push Mode'
+    });
+
+    if (!pushMode) {
+      return;
+    }
+
+    if (pushMode.value === 'force-with-lease') {
+      const confirm = await vscode.window.showWarningMessage(
+        'Force push will overwrite remote history. Are you sure?',
+        { modal: true },
+        'Yes, force push'
+      );
+
+      if (confirm !== 'Yes, force push') {
+        return;
+      }
+    }
+
+    request.options = { ...request.options, pushMode: pushMode.value };
+
+    try {
+      await this.bulkOperations.executeBulkPush(request);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Bulk push failed: ${errorMessage}`);
     }
   }
 
