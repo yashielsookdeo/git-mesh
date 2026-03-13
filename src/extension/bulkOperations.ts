@@ -50,7 +50,11 @@ export class BulkOperations {
       execute: async () => {
         const result = await this.gitRunner.runGit(repoPath, ['checkout', request.options!.branch!]);
         if (result.exitCode !== 0) {
-          throw new Error(result.stderr || 'Checkout failed');
+          // Branch doesn't exist — try creating it
+          const createResult = await this.gitRunner.runGit(repoPath, ['checkout', '-b', request.options!.branch!]);
+          if (createResult.exitCode !== 0) {
+            throw new Error(createResult.stderr || 'Checkout failed');
+          }
         }
       }
     }));
