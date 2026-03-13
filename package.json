@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/yashielsookdeo/gitmesh#readme",
   "license": "MIT",
+  "icon": "images/icon.png",
   "main": "./out/extension/extension.js",
   "contributes": {
     "commands": [
