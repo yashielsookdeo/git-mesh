@@ -180,6 +180,21 @@ export class BulkOperations {
           if (pullResult.exitCode !== 0) {
             throw new Error(pullResult.stderr || 'Pull --ff-only failed');
           }
+          this.onProgress({
+            repoPath,
+            operation: 'sync',
+            status: 'success',
+            message: 'Synced'
+          });
+          return false;
+        } else {
+          this.onProgress({
+            repoPath,
+            operation: 'sync',
+            status: 'success',
+            message: 'Fetch only (feature branch)'
+          });
+          return false;
         }
       }
     }));

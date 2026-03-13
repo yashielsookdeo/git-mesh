@@ -163,9 +163,6 @@ export class GitMeshWebviewProvider {
         case 'fetch':
           await this.bulkOperations.executeBulkFetch(request);
           break;
-        case 'push':
-          await this.bulkOperations.executeBulkPush(request);
-          break;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
