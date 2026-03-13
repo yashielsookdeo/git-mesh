@@ -127,4 +127,89 @@ export class BulkOperations {
     await this.operationQueue.enqueue(operations);
     this.onComplete();
   }
+
+  async executeBulkSync(request: BulkOperationRequest): Promise<void> {
+    this.outputChannel.appendLine(
+      `[BulkOperations] Starting bulk sync for ${request.repoPaths.length} repos`
+    );
+
+    const operations: QueuedOperation[] = request.repoPaths.map(repoPath => ({
+      repoPath,
+      operation: 'sync',
+      execute: async () => {
+        // Check for uncommitted changes
+        const statusResult = await this.gitRunner.runGit(repoPath, ['status', '--porcelain']);
+        if (statusResult.stdout.trim().length > 0) {
+          this.onProgress({
+            repoPath,
+            operation: 'sync',
+            status: 'skipped',
+            message: 'Skipped: uncommitted changes'
+          });
+          return false; // Signal queue to skip automatic success reporting
+        }
+
+        // Detect default branch
+        const defaultBranch = await this.detectDefaultBranch(repoPath);
+
+        // Get current branch
+        const branchResult = await this.gitRunner.runGit(repoPath, ['rev-parse', '--abbrev-ref', 'HEAD']);
+        const currentBranch = branchResult.stdout.trim();
+
+        // Fetch
+        this.onProgress({
+          repoPath,
+          operation: 'sync',
+          status: 'running',
+          message: 'Fetching...'
+        });
+        const fetchResult = await this.gitRunner.runGit(repoPath, ['fetch', '--all', '--prune']);
+        if (fetchResult.exitCode !== 0) {
+          throw new Error(fetchResult.stderr || 'Fetch failed');
+        }
+
+        // Pull only if on default branch
+        if (currentBranch === defaultBranch) {
+          this.onProgress({
+            repoPath,
+            operation: 'sync',
+            status: 'running',
+            message: 'Pulling...'
+          });
+          const pullResult = await this.gitRunner.runGit(repoPath, ['pull', '--ff-only']);
+          if (pullResult.exitCode !== 0) {
+            throw new Error(pullResult.stderr || 'Pull --ff-only failed');
+          }
+        }
+      }
+    }));
+
+    await this.operationQueue.enqueue(operations);
+    this.onComplete();
+  }
+
+  private async detectDefaultBranch(repoPath: string): Promise<string> {
+    // Try to auto-detect from remote
+    await this.gitRunner.runGit(repoPath, ['remote', 'set-head', 'origin', '--auto']);
+    const result = await this.gitRunner.runGit(repoPath, ['symbolic-ref', 'refs/remotes/origin/HEAD']);
+
+    if (result.exitCode === 0 && result.stdout.trim()) {
+      // Output is like "refs/remotes/origin/main" — extract branch name
+      const ref = result.stdout.trim();
+      return ref.replace('refs/remotes/origin/', '');
+    }
+
+    // Fallback: check if "main" exists, then "master"
+    const mainCheck = await this.gitRunner.runGit(repoPath, ['rev-parse', '--verify', 'refs/heads/main']);
+    if (mainCheck.exitCode === 0) {
+      return 'main';
+    }
+
+    const masterCheck = await this.gitRunner.runGit(repoPath, ['rev-parse', '--verify', 'refs/heads/master']);
+    if (masterCheck.exitCode === 0) {
+      return 'master';
+    }
+
+    return 'main';
+  }
 }
