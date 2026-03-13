@@ -13,6 +13,7 @@ export class GitMeshWebviewProvider {
   private statusPoller: StatusPoller;
   private bulkOperations: BulkOperations;
   private currentRepos: string[] = [];
+  private lastRefreshTime: number = 0;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -34,6 +35,18 @@ export class GitMeshWebviewProvider {
     );
 
     this.repoSource.setupWatcher(() => this.refreshRepos());
+
+    // Auto-refresh on window focus
+    const focusDisposable = vscode.window.onDidChangeWindowState((state) => {
+      if (state.focused && this.panel) {
+        const now = Date.now();
+        if (now - this.lastRefreshTime > 2000) {
+          this.lastRefreshTime = now;
+          this.refreshStatus();
+        }
+      }
+    });
+    this.disposables.push(focusDisposable);
   }
 
   public show() {
