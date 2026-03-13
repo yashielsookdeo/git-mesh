@@ -14,6 +14,7 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [operations, setOperations] = useState<Map<string, OperationProgress>>(new Map());
+  const [sortMode, setSortMode] = useState<'workspace' | 'status' | 'branch' | 'name'>('workspace');
 
   const handleMessage = useCallback((message: MessageToWebview) => {
     switch (message.type) {
@@ -52,6 +53,9 @@ export const App: React.FC = () => {
       case 'logMessage':
         console.log('Log:', message.data);
         break;
+      case 'sortModeUpdate':
+        setSortMode(message.data.sortMode || 'workspace');
+        break;
     }
   }, []);
 
@@ -62,14 +66,47 @@ export const App: React.FC = () => {
   }, [postMessage]);
 
   const filteredRepos = useMemo(() => {
-    if (!searchQuery.trim()) return repos;
-    const keywords = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return repos.filter(repo => {
-      const statusText = repo.isDirty ? 'modified' : repo.hasUntracked ? 'untracked' : 'clean';
-      const searchable = `${repo.alias || ''} ${repo.name} ${repo.branch} ${statusText}`.toLowerCase();
-      return keywords.every(kw => searchable.includes(kw));
-    });
-  }, [repos, searchQuery]);
+    let result = repos;
+
+    if (searchQuery.trim()) {
+      const keywords = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+      result = result.filter(repo => {
+        const statusText = repo.isDirty ? 'modified' : repo.hasUntracked ? 'untracked' : 'clean';
+        const searchable = `${repo.alias || ''} ${repo.name} ${repo.branch} ${statusText}`.toLowerCase();
+        return keywords.every(kw => searchable.includes(kw));
+      });
+    }
+
+    const sorted = [...result];
+    switch (sortMode) {
+      case 'status':
+        sorted.sort((a, b) => {
+          const statusOrder = (r: RepoStatus) => r.isDirty ? 0 : r.hasUntracked ? 1 : 2;
+          const diff = statusOrder(a) - statusOrder(b);
+          return diff !== 0 ? diff : (a.order ?? 999) - (b.order ?? 999);
+        });
+        break;
+      case 'branch':
+        sorted.sort((a, b) => {
+          const diff = a.branch.localeCompare(b.branch);
+          return diff !== 0 ? diff : (a.order ?? 999) - (b.order ?? 999);
+        });
+        break;
+      case 'name':
+        sorted.sort((a, b) => {
+          const nameA = (a.alias || a.name).toLowerCase();
+          const nameB = (b.alias || b.name).toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        break;
+      case 'workspace':
+      default:
+        // Already sorted by order from the extension
+        break;
+    }
+
+    return sorted;
+  }, [repos, searchQuery, sortMode]);
 
   const toggleRepoSelection = (repoPath: string) => {
     setSelectedRepos(prev => {
@@ -147,6 +184,11 @@ export const App: React.FC = () => {
     setSelectedRepos(new Set());
   };
 
+  const handleSortChange = (mode: 'workspace' | 'status' | 'branch' | 'name') => {
+    setSortMode(mode);
+    postMessage({ type: 'setSortMode', data: { sortMode: mode } });
+  };
+
   const dirtyCount = repos.filter(r => r.isDirty).length;
   const cleanCount = repos.filter(r => !r.isDirty && !r.hasUntracked).length;
   const untrackedCount = repos.filter(r => r.hasUntracked && !r.isDirty).length;
@@ -192,6 +234,19 @@ export const App: React.FC = () => {
             {searchQuery && (
               <button className="search-clear" onClick={() => setSearchQuery('')}>&times;</button>
             )}
+          </div>
+
+          <div className="sort-bar">
+            <span className="sort-label">Sort:</span>
+            {(['workspace', 'status', 'branch', 'name'] as const).map(mode => (
+              <button
+                key={mode}
+                className={`sort-option ${sortMode === mode ? 'active' : ''}`}
+                onClick={() => handleSortChange(mode)}
+              >
+                {mode === 'workspace' ? 'Workspace Order' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
           </div>
 
           <div className="action-bar">

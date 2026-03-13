@@ -157,6 +157,42 @@ body {
   color: var(--vscode-foreground);
 }
 
+/* ── Sort Bar ── */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--gm-md);
+  font-size: 11px;
+}
+
+.sort-label {
+  color: var(--vscode-descriptionForeground);
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+.sort-option {
+  padding: 2px 8px;
+  font-size: 11px;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  border: 1px solid transparent;
+  border-radius: var(--gm-radius);
+  cursor: pointer;
+}
+
+.sort-option:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+.sort-option.active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+}
+
 /* ── Buttons ── */
 button {
   display: inline-flex;
@@ -459,6 +495,10 @@ button.icon-button:hover:not(:disabled) {
 
 .operation-indicator.error {
   color: var(--vscode-errorForeground, #f85149);
+}
+
+.operation-indicator.skipped {
+  color: var(--vscode-descriptionForeground);
 }
 
 .operation-indicator .loading-spinner {
