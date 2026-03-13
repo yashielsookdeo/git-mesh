@@ -102,6 +102,9 @@ export class GitMeshWebviewProvider {
       case 'bulkReset':
         await this.handleBulkReset(message.data as BulkOperationRequest);
         break;
+      case 'bulkSync':
+        await this.handleBulkSync(message.data as BulkOperationRequest);
+        break;
       case 'fetchGitTree':
         await this.handleFetchGitTree(message.data as GitTreeRequest);
         break;
@@ -242,6 +245,15 @@ export class GitMeshWebviewProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       vscode.window.showErrorMessage(`Bulk reset failed: ${errorMessage}`);
+    }
+  }
+
+  private async handleBulkSync(request: BulkOperationRequest) {
+    try {
+      await this.bulkOperations.executeBulkSync(request);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Bulk sync failed: ${errorMessage}`);
     }
   }
 
