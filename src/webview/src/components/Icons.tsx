@@ -73,3 +73,27 @@ export const GitMeshLogo: React.FC = () => (
         <line x1="10.5" y1="5.5" x2="5.5" y2="10.5" stroke="var(--vscode-button-background)" strokeWidth="1" opacity="0.4" />
     </svg>
 );
+
+export const SyncIcon: React.FC = () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M2.006 8.267L.78 9.5 0 8.73l2.09-2.07.76.01 2.09 2.12-.76.76-1.167-1.18a5 5 0 0 0 9.4 1.96l.72.26a5.75 5.75 0 0 1-10.8-2.32h-.327zM13.994 7.733l1.227-1.233.78.77-2.09 2.07-.76-.01-2.09-2.12.76-.76 1.167 1.18a5 5 0 0 0-9.4-1.96l-.72-.26a5.75 5.75 0 0 1 10.8 2.32h.327z" />
+    </svg>
+);
+
+export const MoreIcon: React.FC = () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M7.5 13a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0-5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0-5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
+    </svg>
+);
+
+export const EllipsisIcon: React.FC = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+    </svg>
+);
+
+export const SkipIcon: React.FC = () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 12.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zM5 7.25h6v1.5H5v-1.5z" />
+    </svg>
+);
